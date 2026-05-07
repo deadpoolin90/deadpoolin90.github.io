@@ -5,7 +5,7 @@ let cols, rows;
 let selection = null;
 let score = 0;
 let timeLeft = 120;
-const APPLE_SIZE = 45;
+const APPLE_SIZE = 45; // 기본 크기
 
 let comboCount = 0;
 let lastMatchTime = 0;
@@ -33,12 +33,11 @@ function initGame() {
 }
 
 function draw() {
-  // 1. 화면 흔들림 (최소화: 0.7 비율로 빠르게 감쇄)
+  // 1. 화면 흔들림 (아주 미세하게 조정)
   if (shakeAmount > 0) {
     push();
     translate(random(-shakeAmount, shakeAmount), random(-shakeAmount, shakeAmount));
-    shakeAmount *= 0.7; 
-    if (shakeAmount < 0.1) shakeAmount = 0;
+    shakeAmount *= 0.6; 
   }
 
   background(255, 245, 245);
@@ -50,39 +49,38 @@ function draw() {
     
     push();
     if (selected) {
-      // (수정) 네가 준 코드의 연분홍 하이라이트 색상 적용
+      // 선택되었을 때: 연분홍색 + 아주 조금 작아짐
       fill(255, 200, 200); 
       stroke(255, 0, 0);
       strokeWeight(2);
+      ellipse(a.x, a.y, APPLE_SIZE * 0.9); // 크기 10% 축소
     } else {
+      // 평상시: 원래 코드의 스타일 유지
       fill(255, 100, 100);
       noStroke();
+      ellipse(a.x, a.y, APPLE_SIZE);
     }
-    ellipse(a.x, a.y, APPLE_SIZE);
     
+    // 숫자 스타일: 흰색 볼드 유지
     fill(255);
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(22);
+    textSize(24);
+    // 선택 시 숫자도 사과와 함께 살짝 작아지거나 위치 유지
     text(a.val, a.x, a.y);
     pop();
   }
 
   if (shakeAmount > 0) pop();
 
-  // 효과 업데이트 (파티클, 콤보 텍스트)
   updateEffects();
 
-  // 3. 드래그 박스 (깔끔하게 수정)
+  // 3. 드래그 박스
   if (selection) {
     noFill();
     stroke(255, 0, 0, 150);
     strokeWeight(2);
-    let x = min(selection.x1, selection.x2);
-    let y = min(selection.y1, selection.y2);
-    let w = abs(selection.x2 - selection.x1);
-    let h = abs(selection.y2 - selection.y1);
-    rect(x, y, w, h);
+    rect(selection.x1, selection.y1, selection.x2 - selection.x1, selection.y2 - selection.y1);
   }
 
   drawUI();
@@ -102,10 +100,11 @@ function updateEffects() {
 }
 
 function drawUI() {
-  fill(80);
+  fill(50);
   noStroke();
   textAlign(CENTER, TOP);
-  textFont("'Arial Rounded MT Bold', 'Helvetica', sans-serif");
+  // 폰트는 예전의 깔끔한 고딕 계열 유지
+  textFont("'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif");
   textSize(16);
   text("드래그해서 합을 10으로 만드세요!", width/2, 20);
 
@@ -142,25 +141,23 @@ function mouseReleased() {
     comboCount++;
     lastMatchTime = millis();
     score += (1 + comboCount); 
-    shakeAmount = 2.5; // (수정) 흔들림 아주 낮게 조정
+    shakeAmount = 1.5; // 흔들림을 아주 작게 줄임
     
     centerX /= selectedApples.length;
     centerY /= selectedApples.length;
 
-    // (수정) 사과가 있던 위치에 콤보 텍스트 생성
     if (comboCount > 1) {
       floatingTexts.push(new FloatingText(getComboText(comboCount), centerX, centerY));
     }
 
     for (let a of selectedApples) {
       a.active = false;
-      for (let i = 0; i < 10; i++) particles.push(new Particle(a.x, a.y));
+      for (let i = 0; i < 8; i++) particles.push(new Particle(a.x, a.y));
     }
   }
   selection = null;
 }
 
-// (수정) 사과가 있던 자리에 뜨는 작은 콤보 텍스트
 class FloatingText {
   constructor(txt, x, y) {
     this.txt = txt;
@@ -170,17 +167,17 @@ class FloatingText {
     this.yOffset = 0;
   }
   update() {
-    this.yOffset -= 1.5; // 위로 조금씩 올라감
-    this.alpha -= 5;
+    this.yOffset -= 1;
+    this.alpha -= 6;
   }
   show() {
     push();
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(28); // (수정) 크기 적절히 줄임
+    textSize(22); // 작게 표시
     fill(255, 50, 50, this.alpha);
     stroke(255, 255, 255, this.alpha);
-    strokeWeight(3);
+    strokeWeight(2);
     text(this.txt, this.x, this.y + this.yOffset);
     pop();
   }
@@ -198,20 +195,20 @@ function isSelected(a) {
 }
 
 function getComboText(count) {
-  const list = ["", "DOUBLE!", "TRIPLE!", "QUAD!", "PENTA!", "EXCELLENT!", "AMAZING!"];
+  const list = ["", "DOUBLE!", "TRIPLE!", "QUAD!", "PENTA!", "GO!", "COOL!"];
   return list[min(count - 1, list.length - 1)];
 }
 
 class Particle {
   constructor(x, y) {
     this.x = x; this.y = y;
-    this.vx = random(-4, 4);
-    this.vy = random(-4, 4);
+    this.vx = random(-3, 3);
+    this.vy = random(-3, 3);
     this.alpha = 255;
-    this.color = color(255, random(80, 180), 80);
+    this.color = color(255, 100, 100);
   }
-  update() { this.x += this.vx; this.y += this.vy; this.vy += 0.2; this.alpha -= 12; }
-  show() { noStroke(); fill(red(this.color), green(this.color), blue(this.color), this.alpha); ellipse(this.x, this.y, random(3, 7)); }
+  update() { this.x += this.vx; this.y += this.vy; this.alpha -= 15; }
+  show() { noStroke(); fill(red(this.color), green(this.color), blue(this.color), this.alpha); ellipse(this.x, this.y, random(2, 5)); }
   finished() { return this.alpha < 0; }
 }
 
