@@ -5,7 +5,7 @@ let cols, rows;
 let selection = null;
 let score = 0;
 let timeLeft = 120;
-const APPLE_SIZE = 48; // 사과 크기 살짝 키움
+const APPLE_SIZE = 48; 
 
 let comboCount = 0;
 let lastMatchTime = 0;
@@ -18,7 +18,8 @@ function setup() {
 
 function initGame() {
   apples = [];
-  cols = floor(width / 65); // 간격 조정
+  // 사과 간격 및 상하좌우 여백 조정
+  cols = floor(width / 65);
   rows = floor((height - 120) / 65);
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
@@ -33,6 +34,7 @@ function initGame() {
 }
 
 function draw() {
+  // 1. 화면 흔들림 (아주 미세하게)
   if (shakeAmount > 0) {
     push();
     translate(random(-shakeAmount, shakeAmount), random(-shakeAmount, shakeAmount));
@@ -41,6 +43,7 @@ function draw() {
 
   background(255, 245, 245);
   
+  // 2. 사과 그리기 루프
   for (let a of apples) {
     if (!a.active) continue;
     let selected = isSelected(a);
@@ -48,43 +51,26 @@ function draw() {
     push();
     translate(a.x, a.y);
     
-    // 선택 시 아주 조금 작아지는 효과
-    if (selected) scale(0.9);
+    // 선택 시 쫀득하게 작아짐 (0.85배)
+    if (selected) scale(0.85);
 
-    // 1. 사과 꼭지와 잎사귀 (디테일 추가)
-    strokeWeight(2);
-    stroke(100, 50, 0); // 갈색 꼭지
-    line(0, -APPLE_SIZE/2, 0, -APPLE_SIZE/2 - 8);
-    noStroke();
-    fill(50, 200, 50); // 초록 잎사귀
-    ellipse(5, -APPLE_SIZE/2 - 5, 10, 5);
+    drawAppleShape(selected); // 사과 쉐입 그리기
 
-    // 2. 사과 몸통 (약간 하트 쉐입 느낌의 타원)
-    if (selected) {
-      fill(255, 200, 200); 
-      stroke(255, 0, 0);
-      strokeWeight(2);
-    } else {
-      fill(255, 80, 80); // 조금 더 진한 사과색
-      noStroke();
-    }
-    // 사과 특유의 둥글넙적한 모양
-    ellipse(0, 0, APPLE_SIZE, APPLE_SIZE * 0.9);
-    
-    // 3. 숫자 (가독성 극대화)
+    // 숫자 그리기 (흰색 볼드, 정중앙)
     fill(255);
     noStroke();
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(26); // 숫자 크기 키움
-    // 텍스트 베이스라인 오차 보정을 위해 y좌표 미세 조정(+2)
-    text(a.val, 0, 2);
+    textSize(24);
+    text(a.val, 0, 4); 
     pop();
   }
 
-  if (shakeAmount > 0) pop();
-  updateEffects();
+  if (shakeAmount > 0) pop(); // 흔들림 종료
 
+  updateEffects(); // 파티클 및 콤보 텍스트
+
+  // 3. 드래그 박스 (깔끔한 레드 라인)
   if (selection) {
     noFill();
     stroke(255, 0, 0, 150);
@@ -93,6 +79,45 @@ function draw() {
   }
 
   drawUI();
+}
+
+// 사과 모양 전용 렌더링 함수
+function drawAppleShape(selected) {
+  // 꼭지
+  stroke(101, 67, 33);
+  strokeWeight(3);
+  line(0, -15, 0, -25);
+  
+  // 잎사귀
+  noStroke();
+  fill(34, 139, 34);
+  ellipse(8, -22, 12, 6);
+
+  // 몸통 색상 (선택 시 연분홍 하이라이트)
+  if (selected) {
+    fill(255, 200, 200); 
+    stroke(255, 0, 0);
+    strokeWeight(2);
+  } else {
+    fill(230, 50, 50);
+    noStroke();
+  }
+
+  // 사과 특유의 굴곡진 쉐입 (beginShape)
+  beginShape();
+  for (let i = 0; i < TWO_PI; i += 0.1) {
+    let r = APPLE_SIZE * 0.5 * (1 - 0.1 * sin(i) + 0.1 * abs(cos(i)));
+    let x = r * cos(i);
+    let y = r * sin(i);
+    vertex(x, y);
+  }
+  endShape(CLOSE);
+
+  // 광택(Highlight) 추가
+  if (!selected) {
+    fill(255, 255, 255, 130);
+    ellipse(-8, -8, 12, 7);
+  }
 }
 
 function updateEffects() {
@@ -127,8 +152,16 @@ function drawUI() {
   if (millis() - lastMatchTime > 5000) comboCount = 0;
 }
 
-function mousePressed() { selection = { x1: mouseX, y1: mouseY, x2: mouseX, y2: mouseY }; }
-function mouseDragged() { if (selection) { selection.x2 = mouseX; selection.y2 = mouseY; } }
+function mousePressed() {
+  selection = { x1: mouseX, y1: mouseY, x2: mouseX, y2: mouseY };
+}
+
+function mouseDragged() {
+  if (selection) {
+    selection.x2 = mouseX;
+    selection.y2 = mouseY;
+  }
+}
 
 function mouseReleased() {
   if (!selection) return;
@@ -148,11 +181,12 @@ function mouseReleased() {
     comboCount++;
     lastMatchTime = millis();
     score += (1 + comboCount); 
-    shakeAmount = 1.5;
+    shakeAmount = 1.5; // 화면 흔들림 최소화
     
     cX /= selectedApples.length;
     cY /= selectedApples.length;
 
+    // 터진 위치에 콤보 텍스트 생성
     if (comboCount > 1) {
       floatingTexts.push(new FloatingText(getComboText(comboCount), cX, cY));
     }
