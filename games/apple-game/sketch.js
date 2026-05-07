@@ -5,7 +5,7 @@ let cols, rows;
 let selection = null;
 let score = 0;
 let timeLeft = 120;
-const APPLE_SIZE = 55; // 이모지 크기에 맞춰 최적화
+const APPLE_SIZE = 55; 
 
 let comboCount = 0;
 let lastMatchTime = 0;
@@ -13,12 +13,13 @@ let shakeAmount = 0;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  // 무지개색 효과를 위해 HSB 모드 사용 (색상, 채도, 명도, 투명도)
+  colorMode(RGB); 
   initGame();
 }
 
 function initGame() {
   apples = [];
-  // 이모지가 겹치지 않도록 간격을 조금 더 넓힘
   cols = floor(width / 75);
   rows = floor((height - 150) / 75);
   for (let i = 0; i < cols; i++) {
@@ -49,41 +50,36 @@ function draw() {
     push();
     translate(a.x, a.y);
     
-    // 선택되었을 때 쫀득한 반응 효과
-    if (selected) {
-      scale(1.2); // 선택되면 살짝 커지게 변경 (강조 효과)
-    }
+    if (selected) scale(1.2);
 
-    // 1. 사과 이모지 그리기
+    // ★ 이모지 폰트 강제 설정 (시스템 이모지 우선)
+    textFont("'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif");
     textAlign(CENTER, CENTER);
     textSize(APPLE_SIZE);
-    // 선택되었을 때 투명도를 주어 숫자가 더 잘 보이게 함
-    if (selected) {
-      drawingContext.globalAlpha = 0.6;
-    }
+    
+    if (selected) drawingContext.globalAlpha = 0.6;
     text("🍎", 0, 0);
     drawingContext.globalAlpha = 1.0;
 
-    // 2. 숫자 그리기 (사과 정중앙)
+    // 숫자 표시 (폰트를 고딕계열로 다시 변경)
+    textFont("'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif");
     fill(255);
-    stroke(150, 0, 0); // 사과색과 대비되는 얇은 테두리
-    strokeWeight(2);
+    stroke(120, 0, 0);
+    strokeWeight(3);
     textStyle(BOLD);
     textSize(28);
-    // 이모지 특성상 중앙 정렬을 위해 y축을 살짝 보정 (+5)
-    text(a.val, 0, 5); 
+    text(a.val, 0, 6); 
     pop();
   }
 
   if (shakeAmount > 0) pop();
   updateEffects();
 
-  // 드래그 영역 표시
   if (selection) {
     noFill();
     stroke(255, 80, 80, 180);
     strokeWeight(3);
-    drawingContext.setLineDash([5, 5]); // 점선 효과
+    drawingContext.setLineDash([5, 5]);
     rect(selection.x1, selection.y1, selection.x2 - selection.x1, selection.y2 - selection.y1);
     drawingContext.setLineDash([]); 
   }
@@ -91,7 +87,6 @@ function draw() {
   drawUI();
 }
 
-// 나머지 로직은 동일하게 유지 (타격감 및 콤보 시스템)
 function updateEffects() {
   for (let i = particles.length - 1; i >= 0; i--) {
     particles[i].update();
@@ -108,6 +103,7 @@ function updateEffects() {
 function drawUI() {
   fill(80, 40, 40);
   noStroke();
+  textFont("'Apple SD Gothic Neo', sans-serif");
   textAlign(CENTER, TOP);
   textSize(20);
   text("🍎 숫자의 합이 10이 되게 드래그하세요!", width/2, 30);
@@ -143,8 +139,8 @@ function mouseReleased() {
   if (sum === 10) {
     comboCount++;
     lastMatchTime = millis();
-    score += (10 * comboCount); // 점수 체계 상향
-    shakeAmount = 3;
+    score += (10 * comboCount); 
+    shakeAmount = 4;
     
     cX /= sApples.length;
     cY /= sApples.length;
@@ -161,16 +157,29 @@ function mouseReleased() {
   selection = null;
 }
 
+// ★ 무지개색 효과를 가진 FloatingText 클래스
 class FloatingText {
-  constructor(t, x, y) { this.t = t; this.x = x; this.y = y; this.a = 255; }
-  update() { this.y -= 1.5; this.a -= 5; }
+  constructor(t, x, y) {
+    this.t = t; this.x = x; this.y = y;
+    this.a = 255;
+    this.hue = 0; // 무지개색 시작점
+  }
+  update() { 
+    this.y -= 2; 
+    this.a -= 4; 
+    this.hue = (this.hue + 5) % 360; // 매 프레임 색상 변경
+  }
   show() {
     push();
+    colorMode(HSB); // 잠시 HSB 모드로 전환
     textAlign(CENTER, CENTER);
-    textSize(32);
-    fill(255, 0, 0, this.a);
-    stroke(255, 255, 255, this.a);
-    strokeWeight(4);
+    textSize(40);
+    textStyle(BOLD);
+    
+    fill(this.hue, 80, 100, this.a / 255); // 무지개색 채우기
+    stroke(0, 0, 100, this.a / 255); // 흰색 테두리
+    strokeWeight(5);
+    
     text(this.t, this.x, this.y);
     pop();
   }
