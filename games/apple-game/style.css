@@ -1,26 +1,14 @@
 body {
     margin: 0;
     padding: 0;
-    overflow: hidden; /* 스크롤바 숨기기 */
-    background-color: #fffafa;
+    overflow: hidden; /* 스크롤바 방지 */
+    background-color: #fffafa; /* 연한 분홍빛 배경 */
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vh;
 }
 
 canvas {
     display: block;
-}
-
-/* 상단 인포바가 필요 없다면 index.html에서 지워도 돼 */
-#game-info {
-    position: absolute;
-    top: 10px;
-    z-index: 10;
-    pointer-events: none; /* 마우스 드래그 방해 금지 */
-    background-color: rgba(255, 107, 107, 0.8);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 15px;
-    font-size: 14px;
 }
