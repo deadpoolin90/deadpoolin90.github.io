@@ -74,7 +74,7 @@ function draw() {
     strokeWeight(2);
     drawingContext.setLineDash([5, 5]);
     rect(selection.x1, selection.y1, selection.x2 - selection.x1, selection.y2 - selection.y1);
-    drawingContext.setLineDash([]); 
+    drawingContext.setLine([]); 
   }
 
   drawUI();
