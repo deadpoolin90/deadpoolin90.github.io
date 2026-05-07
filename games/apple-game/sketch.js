@@ -167,12 +167,16 @@ function mouseReleased() {
 
 function isSelected(a) {
   if (!selection) return false;
+  
+  // 드래그 방향에 상관없이 영역을 계산하도록 min, max 사용
   let xMin = min(selection.x1, selection.x2);
   let xMax = max(selection.x1, selection.x2);
   let yMin = min(selection.y1, selection.y2);
   let yMax = max(selection.y1, selection.y2);
+  
   let r = APPLE_SIZE / 2;
-  // 사과의 사각형 범위와 드래그 박스 범위가 겹치는지 판정
+  
+  // 사과의 영역과 드래그 영역이 1픽셀이라도 겹치면 인식
   return (xMin < a.x + r && xMax > a.x - r && yMin < a.y + r && yMax > a.y - r);
 }
 
