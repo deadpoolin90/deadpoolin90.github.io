@@ -1,14 +1,22 @@
-body {
+/* 기본 여백을 완전히 제거해서 좌표 오차를 없앱니다 */
+* {
     margin: 0;
     padding: 0;
-    overflow: hidden; /* 스크롤바 방지 */
-    background-color: #fffafa; /* 연한 분홍빛 배경 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100vw;
     height: 100vh;
+    overflow: hidden; /* 스크롤 방지 */
+    background-color: #fffafa;
+    /* 캔버스가 항상 왼쪽 위에 딱 붙도록 설정 (좌표 계산 최적화) */
+    display: block; 
 }
 
 canvas {
     display: block;
+    /* 마우스 클릭 시 텍스트 선택 방지 */
+    user-select: none;
+    -webkit-user-select: none;
 }
