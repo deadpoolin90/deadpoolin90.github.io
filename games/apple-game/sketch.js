@@ -51,11 +51,10 @@ function draw() {
 
     drawRealisticApple(selected); 
 
-    // 숫자 가독성을 위해 얇은 그림자 효과
-    fill(0, 50);
-    text(a.val, 1, 1); 
+    // ★ 숫자 가독성 개선: 번짐 삭제 및 얇은 테두리 추가
     fill(255);
-    noStroke();
+    stroke(0, 0, 0, 150); // 아주 얇고 투명도 있는 검정 테두리
+    strokeWeight(1.5);    // 테두리 두께
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
     textSize(26);
@@ -76,50 +75,43 @@ function draw() {
   drawUI();
 }
 
-// ★ 실제 사과 같은 방사형 그라데이션과 하이라이트 구현
 function drawRealisticApple(selected) {
   push();
-  // 1. 방사형 그라데이션 (노랑 -> 빨강 -> 진한 빨강)
-  // p5.js의 canvas context를 직접 제어하여 그라데이션 생성
   let grad = drawingContext.createRadialGradient(-5, -5, 2, 0, 0, APPLE_SIZE / 2);
   
   if (selected) {
-    grad.addColorStop(0, '#ffcfcf'); // 선택 시 밝아짐
+    grad.addColorStop(0, '#ffcfcf'); 
     grad.addColorStop(0.5, '#ff7070');
     grad.addColorStop(1, '#cc4040');
   } else {
-    grad.addColorStop(0, '#fff2a8'); // 사과 중심의 노란빛
-    grad.addColorStop(0.3, '#ff4d4d'); // 중간 붉은색
-    grad.addColorStop(1, '#a10000');   // 외곽의 진한 깊이감
+    grad.addColorStop(0, '#fff2a8'); 
+    grad.addColorStop(0.3, '#ff4d4d'); 
+    grad.addColorStop(1, '#a10000');   
   }
   
   drawingContext.fillStyle = grad;
-  noStroke();
+  noStroke(); // 구체 자체에는 선을 없앰
   ellipse(0, 0, APPLE_SIZE, APPLE_SIZE);
 
-  // 2. 느낌표 모양 곡선 하이라이트 (Glossy Curve)
+  // 느낌표 모양 곡선 하이라이트
   push();
   rotate(-QUARTER_PI);
   noFill();
   stroke(255, 255, 255, 180);
   strokeWeight(4);
   strokeCap(ROUND);
-  // 느낌표 머리 부분 (곡선)
   arc(0, 0, APPLE_SIZE * 0.7, APPLE_SIZE * 0.7, PI + 0.2, PI + 0.8);
   
-  // 느낌표 점 부분
   noStroke();
   fill(255, 255, 255, 150);
   ellipse(-APPLE_SIZE * 0.35, 5, 4, 4);
   pop();
 
-  // 3. 은은한 반사광 (Rim Light)
+  // 하단 반사광
   fill(255, 255, 255, 30);
   ellipse(5, APPLE_SIZE * 0.25, APPLE_SIZE * 0.4, APPLE_SIZE * 0.15);
   pop();
 }
-
-// --- 이하는 기능 유지를 위한 동일한 코드 ---
 
 function isSelected(a) {
   if (!selection) return false;
