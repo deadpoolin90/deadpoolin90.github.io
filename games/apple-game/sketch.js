@@ -5,7 +5,7 @@ let cols, rows;
 let selection = null;
 let score = 0;
 let timeLeft = 120;
-const APPLE_SIZE = 45; // 기본 크기
+const APPLE_SIZE = 48; // 사과 크기 살짝 키움
 
 let comboCount = 0;
 let lastMatchTime = 0;
@@ -18,13 +18,13 @@ function setup() {
 
 function initGame() {
   apples = [];
-  cols = floor(width / 60);
-  rows = floor((height - 120) / 60);
+  cols = floor(width / 65); // 간격 조정
+  rows = floor((height - 120) / 65);
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       apples.push({
-        x: i * 60 + 50,
-        y: j * 60 + 80,
+        x: i * 65 + 50,
+        y: j * 65 + 100,
         val: floor(random(1, 10)),
         active: true
       });
@@ -33,7 +33,6 @@ function initGame() {
 }
 
 function draw() {
-  // 1. 화면 흔들림 (아주 미세하게 조정)
   if (shakeAmount > 0) {
     push();
     translate(random(-shakeAmount, shakeAmount), random(-shakeAmount, shakeAmount));
@@ -42,40 +41,50 @@ function draw() {
 
   background(255, 245, 245);
   
-  // 2. 사과 그리기
   for (let a of apples) {
     if (!a.active) continue;
     let selected = isSelected(a);
     
     push();
+    translate(a.x, a.y);
+    
+    // 선택 시 아주 조금 작아지는 효과
+    if (selected) scale(0.9);
+
+    // 1. 사과 꼭지와 잎사귀 (디테일 추가)
+    strokeWeight(2);
+    stroke(100, 50, 0); // 갈색 꼭지
+    line(0, -APPLE_SIZE/2, 0, -APPLE_SIZE/2 - 8);
+    noStroke();
+    fill(50, 200, 50); // 초록 잎사귀
+    ellipse(5, -APPLE_SIZE/2 - 5, 10, 5);
+
+    // 2. 사과 몸통 (약간 하트 쉐입 느낌의 타원)
     if (selected) {
-      // 선택되었을 때: 연분홍색 + 아주 조금 작아짐
       fill(255, 200, 200); 
       stroke(255, 0, 0);
       strokeWeight(2);
-      ellipse(a.x, a.y, APPLE_SIZE * 0.9); // 크기 10% 축소
     } else {
-      // 평상시: 원래 코드의 스타일 유지
-      fill(255, 100, 100);
+      fill(255, 80, 80); // 조금 더 진한 사과색
       noStroke();
-      ellipse(a.x, a.y, APPLE_SIZE);
     }
+    // 사과 특유의 둥글넙적한 모양
+    ellipse(0, 0, APPLE_SIZE, APPLE_SIZE * 0.9);
     
-    // 숫자 스타일: 흰색 볼드 유지
+    // 3. 숫자 (가독성 극대화)
     fill(255);
+    noStroke();
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(24);
-    // 선택 시 숫자도 사과와 함께 살짝 작아지거나 위치 유지
-    text(a.val, a.x, a.y);
+    textSize(26); // 숫자 크기 키움
+    // 텍스트 베이스라인 오차 보정을 위해 y좌표 미세 조정(+2)
+    text(a.val, 0, 2);
     pop();
   }
 
   if (shakeAmount > 0) pop();
-
   updateEffects();
 
-  // 3. 드래그 박스
   if (selection) {
     noFill();
     stroke(255, 0, 0, 150);
@@ -103,12 +112,11 @@ function drawUI() {
   fill(50);
   noStroke();
   textAlign(CENTER, TOP);
-  // 폰트는 예전의 깔끔한 고딕 계열 유지
   textFont("'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif");
-  textSize(16);
-  text("드래그해서 합을 10으로 만드세요!", width/2, 20);
+  textSize(18);
+  text("합이 10이 되게 사과를 드래그하세요!", width/2, 25);
 
-  textSize(26);
+  textSize(28);
   textAlign(LEFT, BOTTOM);
   text(`🍎 SCORE: ${score}`, 30, height - 30);
   
@@ -126,14 +134,13 @@ function mouseReleased() {
   if (!selection) return;
   let sum = 0;
   let selectedApples = [];
-  let centerX = 0, centerY = 0;
+  let cX = 0, cY = 0;
 
   for (let a of apples) {
     if (a.active && isSelected(a)) {
       sum += a.val;
       selectedApples.push(a);
-      centerX += a.x;
-      centerY += a.y;
+      cX += a.x; cY += a.y;
     }
   }
 
@@ -141,13 +148,13 @@ function mouseReleased() {
     comboCount++;
     lastMatchTime = millis();
     score += (1 + comboCount); 
-    shakeAmount = 1.5; // 흔들림을 아주 작게 줄임
+    shakeAmount = 1.5;
     
-    centerX /= selectedApples.length;
-    centerY /= selectedApples.length;
+    cX /= selectedApples.length;
+    cY /= selectedApples.length;
 
     if (comboCount > 1) {
-      floatingTexts.push(new FloatingText(getComboText(comboCount), centerX, centerY));
+      floatingTexts.push(new FloatingText(getComboText(comboCount), cX, cY));
     }
 
     for (let a of selectedApples) {
@@ -160,25 +167,19 @@ function mouseReleased() {
 
 class FloatingText {
   constructor(txt, x, y) {
-    this.txt = txt;
-    this.x = x;
-    this.y = y;
-    this.alpha = 255;
-    this.yOffset = 0;
+    this.txt = txt; this.x = x; this.y = y;
+    this.alpha = 255; this.yO = 0;
   }
-  update() {
-    this.yOffset -= 1;
-    this.alpha -= 6;
-  }
+  update() { this.yO -= 1; this.alpha -= 6; }
   show() {
     push();
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(22); // 작게 표시
+    textSize(22);
     fill(255, 50, 50, this.alpha);
     stroke(255, 255, 255, this.alpha);
     strokeWeight(2);
-    text(this.txt, this.x, this.y + this.yOffset);
+    text(this.txt, this.x, this.y + this.yO);
     pop();
   }
   finished() { return this.alpha < 0; }
@@ -195,7 +196,7 @@ function isSelected(a) {
 }
 
 function getComboText(count) {
-  const list = ["", "DOUBLE!", "TRIPLE!", "QUAD!", "PENTA!", "GO!", "COOL!"];
+  const list = ["", "DOUBLE!", "TRIPLE!", "QUAD!", "PENTA!", "SUPER!", "COOL!"];
   return list[min(count - 1, list.length - 1)];
 }
 
