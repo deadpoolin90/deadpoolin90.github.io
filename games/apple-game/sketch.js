@@ -39,7 +39,7 @@ function draw() {
     shakeAmount *= 0.6; 
   }
 
-  background(255, 245, 245);
+  background(255, 250, 245);
   
   for (let a of apples) {
     if (!a.active) continue;
@@ -49,8 +49,11 @@ function draw() {
     translate(a.x, a.y);
     if (selected) scale(1.15); 
 
-    drawGlossySphere(selected); // ★ 곡선 하이라이트 함수 호출
+    drawRealisticApple(selected); 
 
+    // 숫자 가독성을 위해 얇은 그림자 효과
+    fill(0, 50);
+    text(a.val, 1, 1); 
     fill(255);
     noStroke();
     textAlign(CENTER, CENTER);
@@ -65,57 +68,58 @@ function draw() {
 
   if (selection) {
     noFill();
-    stroke(255, 80, 80, 180);
+    stroke(200, 50, 50, 150);
     strokeWeight(2);
-    drawingContext.setLineDash([5, 5]);
     rect(selection.x1, selection.y1, selection.x2 - selection.x1, selection.y2 - selection.y1);
-    drawingContext.setLineDash([]); 
   }
 
   drawUI();
 }
 
-// ★ 곡선 하이라이트(느낌표 모양)가 들어간 구 그리기
-function drawGlossySphere(selected) {
-  noStroke();
+// ★ 실제 사과 같은 방사형 그라데이션과 하이라이트 구현
+function drawRealisticApple(selected) {
+  push();
+  // 1. 방사형 그라데이션 (노랑 -> 빨강 -> 진한 빨강)
+  // p5.js의 canvas context를 직접 제어하여 그라데이션 생성
+  let grad = drawingContext.createRadialGradient(-5, -5, 2, 0, 0, APPLE_SIZE / 2);
   
-  // 1. 베이스 그림자 (가장 어두운 부분)
-  fill(selected ? color(180, 40, 40) : color(150, 0, 0));
+  if (selected) {
+    grad.addColorStop(0, '#ffcfcf'); // 선택 시 밝아짐
+    grad.addColorStop(0.5, '#ff7070');
+    grad.addColorStop(1, '#cc4040');
+  } else {
+    grad.addColorStop(0, '#fff2a8'); // 사과 중심의 노란빛
+    grad.addColorStop(0.3, '#ff4d4d'); // 중간 붉은색
+    grad.addColorStop(1, '#a10000');   // 외곽의 진한 깊이감
+  }
+  
+  drawingContext.fillStyle = grad;
+  noStroke();
   ellipse(0, 0, APPLE_SIZE, APPLE_SIZE);
 
-  // 2. 중간 톤 (그라데이션 효과)
-  fill(selected ? color(255, 100, 100) : color(220, 30, 30));
-  ellipse(0, -1, APPLE_SIZE * 0.95, APPLE_SIZE * 0.9);
-
-  // 3. 메인 하이라이트 (느낌표 모양)
-  fill(255, 255, 255, 200);
-  
+  // 2. 느낌표 모양 곡선 하이라이트 (Glossy Curve)
   push();
-  rotate(PI / 6); // 약간 기울여서 자연스럽게
-  // 느낌표 위쪽 (휘어진 곡선)
-  beginShape();
-  let r = APPLE_SIZE * 0.35;
-  for (let a = -PI/1.5; a < -PI/3; a += 0.1) {
-    let x = cos(a) * r;
-    let y = sin(a) * r;
-    vertex(x, y);
-  }
+  rotate(-QUARTER_PI);
   noFill();
-  stroke(255, 255, 255, 200);
-  strokeWeight(6);
+  stroke(255, 255, 255, 180);
+  strokeWeight(4);
   strokeCap(ROUND);
-  endShape();
+  // 느낌표 머리 부분 (곡선)
+  arc(0, 0, APPLE_SIZE * 0.7, APPLE_SIZE * 0.7, PI + 0.2, PI + 0.8);
   
-  // 느낌표 아래쪽 (작은 점)
+  // 느낌표 점 부분
   noStroke();
-  fill(255, 255, 255, 200);
-  ellipse(cos(-PI/4) * r, sin(-PI/4) * r, 5, 5);
+  fill(255, 255, 255, 150);
+  ellipse(-APPLE_SIZE * 0.35, 5, 4, 4);
   pop();
 
-  // 4. 하단 은은한 반사광
-  fill(255, 255, 255, 40);
-  ellipse(0, APPLE_SIZE * 0.3, APPLE_SIZE * 0.5, APPLE_SIZE * 0.2);
+  // 3. 은은한 반사광 (Rim Light)
+  fill(255, 255, 255, 30);
+  ellipse(5, APPLE_SIZE * 0.25, APPLE_SIZE * 0.4, APPLE_SIZE * 0.15);
+  pop();
 }
+
+// --- 이하는 기능 유지를 위한 동일한 코드 ---
 
 function isSelected(a) {
   if (!selection) return false;
@@ -141,7 +145,7 @@ function updateEffects() {
 }
 
 function drawUI() {
-  fill(100, 50, 50);
+  fill(80, 40, 40);
   noStroke();
   textAlign(CENTER, TOP);
   textSize(20);
@@ -208,7 +212,7 @@ class Particle {
   update() { this.x += this.vx; this.y += this.vy; this.a -= 10; }
   show() {
     noStroke();
-    fill(255, 80, 80, this.a);
+    fill(200, 50, 50, this.a);
     ellipse(this.x, this.y, random(4, 8));
   }
   finished() { return this.a < 0; }
