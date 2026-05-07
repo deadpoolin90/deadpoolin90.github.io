@@ -1,0 +1,12 @@
+/* 전체 화면 여백 제거 */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* 스크롤바 방지 */
+    background-color: #050510; /* 우주 느낌의 어두운 배경 */
+}
+
+/* 캔버스를 화면 중앙에 배치 */
+canvas {
+    display: block;
+}
